@@ -138,83 +138,6 @@ const getUserById = async (userId) => {
 
 // ************************************************** Show friend suggestion****************************
 
-// const fetchSuggestions = async () => {
-//   return new Promise((resolve, reject) => {
-//     onAuthStateChanged(auth, async (user) => {
-//       if (!user) {
-//         console.error("No user logged in");
-//         return resolve([]);
-//       }
-
-//       try {
-//         const currentUserId = user.uid;
-//         console.log("Current User ID:", currentUserId);
-
-//         const usersCollection = collection(db, "users");
-//         const querySnapshot = await getDocs(usersCollection);
-
-//         const users = [];
-//         querySnapshot.forEach((doc) => {
-//           if (doc.id !== currentUserId) {
-//             users.push({ id: doc.id, ...doc.data() });
-//           }
-//         });
-
-//         resolve(users);
-//       } catch (error) {
-//         console.error("Failed to fetch", error);
-//         resolve([]);
-//       }
-//     });
-//   });
-// };
-
-// const fetchSuggestions = async () => {
-//   return new Promise((resolve, reject) => {
-//     onAuthStateChanged(auth, async (user) => {
-//       if (!user) {
-//         console.error("No user logged in");
-//         return resolve([]);
-//       }
-
-//       try {
-//         const currentUserId = user.uid;
-//         const usersCollection = collection(db, "users");
-
-//         const querySnapshot = await getDocs(usersCollection);
-//         const users = [];
-
-//         querySnapshot.forEach((doc) => {
-//           if (doc.id !== currentUserId) {
-//             users.push({ id: doc.id, ...doc.data() });
-//           }
-//         });
-
-//         const friendRequestsSnapshot = await getDocs(
-//           query(
-//             collection(db, "friendRequests"),
-//             where("senderId", "==", currentUserId),
-//             where("status", "==", "pending")
-//           )
-//         );
-
-//         const pendingRequests = new Set(
-//           friendRequestsSnapshot.docs.map((doc) => doc.data().recipientId)
-//         );
-
-//         const filteredUsers = users.filter(
-//           (user) => !pendingRequests.has(user.id)
-//         );
-
-//         resolve(filteredUsers);
-//       } catch (error) {
-//         console.error("Failed to fetch suggestions:", error);
-//         resolve([]);
-//       }
-//     });
-//   });
-// };
-
 const fetchSuggestions = async () => {
   return new Promise((resolve, reject) => {
     onAuthStateChanged(auth, async (user) => {
@@ -227,7 +150,6 @@ const fetchSuggestions = async () => {
         const currentUserId = user.uid;
         const usersCollection = collection(db, "users");
 
-        // Fetch all users except the current user
         const querySnapshot = await getDocs(usersCollection);
         const users = [];
         querySnapshot.forEach((doc) => {
@@ -236,7 +158,6 @@ const fetchSuggestions = async () => {
           }
         });
 
-        // Fetch friend requests where the current user is the sender
         const friendRequestsSnapshot = await getDocs(
           query(
             collection(db, "friendRequests"),
@@ -244,7 +165,6 @@ const fetchSuggestions = async () => {
           )
         );
 
-        // Categorize the statuses of friend requests
         const pendingRequests = new Set();
         const acceptedFriends = new Set();
 
@@ -260,7 +180,6 @@ const fetchSuggestions = async () => {
         console.log("Pending Requests:", pendingRequests);
         console.log("Accepted Friends:", acceptedFriends);
 
-        // Filter out users who are either pending requests or already friends
         const filteredUsers = users.filter(
           (user) =>
             !pendingRequests.has(user.id) && !acceptedFriends.has(user.id)
@@ -277,32 +196,6 @@ const fetchSuggestions = async () => {
 
 // **************************************** Friend Request function***********************
 
-// export const sendFriendRequest = async (recipientId) => {
-//   return new Promise((resolve, reject) => {
-//     onAuthStateChanged(auth, async (user) => {
-//       const senderId = user?.uid;
-//       if (!senderId) {
-//         console.error("User not logged in");
-//         return reject("User not logged in");
-//       }
-
-//       try {
-//         const friendRequestsCollection = collection(db, "friendRequests");
-//         await addDoc(friendRequestsCollection, {
-//           senderId,
-//           recipientId,
-//           status: "pending",
-//           createdAt: new Date(),
-//         });
-//         console.log("Friend request sent");
-//         resolve("Friend request sent");
-//       } catch (error) {
-//         console.error("Error sending friend request", error);
-//         reject(error);
-//       }
-//     });
-//   });
-// };
 export const sendFriendRequest = async (recipientId) => {
   const currentUserId = await new Promise((resolve) => {
     onAuthStateChanged(auth, (user) => {
@@ -335,59 +228,11 @@ export const sendFriendRequest = async (recipientId) => {
 
 // ***************************************** Fetch friend request fucntion ************************
 
-// const fetchFriendRequests = () => {
-//   return new Promise((resolve, reject) => {
-//     onAuthStateChanged(auth, async (user) => {
-//       if (!user) {
-//         console.error("No user logged in");
-//         return resolve([]);
-//       }
-
-//       try {
-//         const currentUserId = user.uid;
-//         const friendRequestsCollection = collection(db, "friendRequests");
-//         const q = query(
-//           friendRequestsCollection,
-//           where("recipientId", "==", currentUserId),
-//           where("status", "==", "pending")
-//         );
-
-//         const querySnapshot = await getDocs(q);
-
-//         const friendRequests = await Promise.all(
-//           querySnapshot.docs.map(async (friendRequestDoc) => {
-//             const requestData = friendRequestDoc.data();
-//             const senderId = requestData.senderId;
-//             console.log("sender id=====>", senderId);
-
-//             const senderDoc = await getDoc(doc(db, "users", senderId));
-//             console.log("sender Name====>", senderDoc);
-//             const senderName = senderDoc.exists()
-//               ? senderDoc.data().fullname
-//               : "Unknown User";
-
-//             return {
-//               id: friendRequestDoc.id,
-//               ...requestData,
-//               senderName,
-//             };
-//           })
-//         );
-
-//         console.log("Fetched friend requests");
-//         resolve(friendRequests);
-//       } catch (error) {
-//         console.error("Failed to fetch friend requests", error);
-//         resolve([]);
-//       }
-//     });
-//   });
-// };
 const fetchFriendRequests = (onUpdate) => {
   onAuthStateChanged(auth, (user) => {
     if (!user) {
       console.error("No user logged in");
-      onUpdate([]); // Empty array if no user
+      onUpdate([]);
       return;
     }
 
@@ -400,11 +245,9 @@ const fetchFriendRequests = (onUpdate) => {
       where("status", "==", "pending")
     );
 
-    // Set up real-time listener
     const unsubscribe = onSnapshot(q, async (snapshot) => {
       const friendRequests = await Promise.all(
         snapshot.docs.map(async (requestDoc) => {
-          // Renamed doc to requestDoc
           const requestData = requestDoc.data();
           const senderDoc = await getDoc(
             doc(db, "users", requestData.senderId)
@@ -419,47 +262,26 @@ const fetchFriendRequests = (onUpdate) => {
             recipientId: requestData.recipientId,
             status: requestData.status,
             senderName,
-            time: requestData.time, // Add a time field if you have it in Firestore
+            time: requestData.time,
           };
         })
       );
 
-      onUpdate(friendRequests); // Pass updated requests to callback
+      onUpdate(friendRequests);
     });
 
-    return unsubscribe; // To stop listening when not needed
+    return unsubscribe;
   });
 };
 
-//  ************************** fucntion to handle friend request **********************
-// const acceptFriendRequest = async (friendRequestId, senderId, recipientId) => {
-//   try {
-//     const friendRequestDoc = doc(db, "friendRequests", friendRequestId);
-//     await updateDoc(friendRequestDoc, { status: "accepted" });
-//     const friendsCollection = collection(db, "friends");
-//     await addDoc(friendsCollection, {
-//       user1Id: senderId,
-//       user2Id: recipientId,
-//       createdAt: new Date(),
-//     });
-
-//     console.log("Friend request accepted and friendship established");
-//   } catch (error) {
-//     console.error("Error accepting friend request:", error);
-//   }
-// };
-
 const acceptFriendRequest = async (friendRequestId, senderId, recipientId) => {
   try {
-    // Update the friend request status to 'accepted'
     const friendRequestRef = doc(db, "friendRequests", friendRequestId);
     await updateDoc(friendRequestRef, { status: "accepted" });
 
-    // Add each user to each other's friends list
     const senderRef = doc(db, "users", senderId);
     const recipientRef = doc(db, "users", recipientId);
 
-    // Use arrayUnion to add friends to each user's friend list
     await updateDoc(senderRef, {
       friends: arrayUnion(recipientId),
     });
@@ -498,38 +320,10 @@ const handleCancel = async (friendRequestId, deleteRequest = false) => {
 
 // ****************************  function to fetch Friend list *******************
 
-// const fetchAcceptedFriends = async () => {
-//   const user = auth.currentUser;
-//   if (!user) return [];
-//   const currentUserId = user.uid;
-
-//   const friendRequestsRef = collection(db, "friendRequests");
-//   const q = query(
-//     friendRequestsRef,
-//     where("recipientId", "==", currentUserId),
-//     where("status", "==", "accepted")
-//   );
-
-//   const querySnapshot = await getDocs(q);
-
-//   const friendData = await Promise.all(
-//     querySnapshot.docs.map(async (docSnap) => {
-//       const requestData = docSnap.data();
-//       const senderDoc = await getDoc(doc(db, "users", requestData.senderId));
-//       return {
-//         id: requestData.senderId,
-//         name: senderDoc.exists() ? senderDoc.data().fullname : "User",
-//       };
-//     })
-//   );
-
-//   return friendData;
-// };
-
 const fetchAcceptedFriends = (callback) => {
   const user = auth.currentUser;
   if (!user) {
-    callback([]); // Call the callback with an empty array if no user is logged in
+    callback([]);
     return;
   }
 
@@ -554,10 +348,10 @@ const fetchAcceptedFriends = (callback) => {
         };
       })
     );
-    callback(friendsList); // Pass updated data to the callback
+    callback(friendsList);
   });
 
-  return unsubscribe; // Return the unsubscribe function
+  return unsubscribe;
 };
 
 //  ********************************** Chat Functions *********************************
